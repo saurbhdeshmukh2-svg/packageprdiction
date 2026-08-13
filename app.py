@@ -3,6 +3,7 @@ import joblib
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 # =========================================================
 # PAGE CONFIGURATION
 # =========================================================
@@ -13,6 +14,7 @@ st.set_page_config(
     layout="wide"
 )
 
+
 # =========================================================
 # CUSTOM CSS
 # =========================================================
@@ -20,9 +22,18 @@ st.set_page_config(
 st.markdown("""
 <style>
 
+/* =======================================================
+   MAIN PAGE BACKGROUND
+   ======================================================= */
+
 .stApp {
-    background: linear-gradient(135deg, #f5f7ff, #eef2ff);
+    background: linear-gradient(135deg, #dcdcdc, #f2f2f2);
 }
+
+
+/* =======================================================
+   MAIN TITLE
+   ======================================================= */
 
 .title {
     font-size: 48px;
@@ -30,14 +41,25 @@ st.markdown("""
     text-align: center;
     margin-top: 10px;
     margin-bottom: 5px;
+    color: #222222;
 }
+
+
+/* =======================================================
+   SUBTITLE
+   ======================================================= */
 
 .subtitle {
     text-align: center;
-    color: #666;
+    color: #555555;
     font-size: 18px;
     margin-bottom: 30px;
 }
+
+
+/* =======================================================
+   PREDICTION CARD
+   ======================================================= */
 
 .prediction-card {
     padding: 30px;
@@ -45,34 +67,107 @@ st.markdown("""
     background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
     text-align: center;
-    box-shadow: 0px 10px 30px rgba(0,0,0,0.15);
+    box-shadow: 0px 10px 30px rgba(0,0,0,0.20);
 }
+
+
+/* =======================================================
+   PREDICTION TITLE
+   ======================================================= */
 
 .prediction-title {
     font-size: 20px;
     margin-bottom: 10px;
+    color: white;
 }
+
+
+/* =======================================================
+   MAIN PACKAGE VALUE
+   ======================================================= */
 
 .package {
     font-size: 48px;
     font-weight: bold;
+    color: #ff4d4d;
 }
+
+
+/* =======================================================
+   CGPA TEXT INSIDE PREDICTION CARD
+   ======================================================= */
 
 .cgpa-text {
     font-size: 18px;
     margin-top: 10px;
+    color: white;
 }
+
+
+/* =======================================================
+   WELCOME CARD
+   ======================================================= */
 
 .info-card {
     padding: 25px;
     border-radius: 18px;
-    background: white;
-    box-shadow: 0px 5px 20px rgba(0,0,0,0.08);
+    background-color: white;
+    box-shadow: 0px 5px 20px rgba(0,0,0,0.10);
+    color: #222222;
 }
+
+
+/* =======================================================
+   STREAMLIT METRIC CARDS
+   ======================================================= */
+
+[data-testid="stMetric"] {
+    background-color: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0px 4px 15px rgba(0,0,0,0.10);
+}
+
+
+/* =======================================================
+   METRIC LABEL
+   ======================================================= */
+
+[data-testid="stMetricLabel"] {
+    color: #333333 !important;
+}
+
+
+/* =======================================================
+   METRIC VALUE
+   ======================================================= */
+
+[data-testid="stMetricValue"] {
+    color: #222222 !important;
+    font-weight: bold !important;
+}
+
+
+/* =======================================================
+   BUTTON
+   ======================================================= */
+
+.stButton > button {
+    width: 100%;
+    height: 50px;
+    border-radius: 10px;
+    font-size: 17px;
+    font-weight: bold;
+}
+
+
+/* =======================================================
+   FOOTER
+   ======================================================= */
 
 .footer {
     text-align: center;
-    color: #777;
+    color: #555555;
     margin-top: 20px;
 }
 
@@ -85,17 +180,24 @@ st.markdown("""
 # =========================================================
 
 try:
+
     model = joblib.load("model.joblib")
 
 except FileNotFoundError:
+
     st.error(
         "⚠️ model.joblib not found!\n\n"
         "Make sure model.joblib is in the same folder as app.py."
     )
+
     st.stop()
 
 except Exception as e:
-    st.error(f"❌ Error loading model: {e}")
+
+    st.error(
+        f"❌ Error loading model: {e}"
+    )
+
     st.stop()
 
 
@@ -110,7 +212,7 @@ st.markdown(
 
 st.markdown(
     '<div class="subtitle">'
-    'Machine Learning based Salary Package Prediction'
+    'Machine Learning Based Salary Package Prediction'
     '</div>',
     unsafe_allow_html=True
 )
@@ -162,21 +264,21 @@ with input_col:
 if predict_button:
 
     # -----------------------------------------------------
-    # Prepare input
+    # PREPARE INPUT
     # -----------------------------------------------------
 
     input_data = np.array([[cgpa]])
 
+
     # -----------------------------------------------------
-    # Make prediction
+    # MAKE PREDICTION
     # -----------------------------------------------------
 
     try:
 
         prediction = model.predict(input_data)
 
-        # IMPORTANT:
-        # Convert NumPy array to a single float value
+        # Convert NumPy array to single number
         prediction = float(
             np.asarray(prediction).flatten()[0]
         )
@@ -230,6 +332,7 @@ if predict_button:
 
     metric1, metric2, metric3 = st.columns(3)
 
+
     with metric1:
 
         st.metric(
@@ -237,12 +340,14 @@ if predict_button:
             f"{cgpa:.2f}"
         )
 
+
     with metric2:
 
         st.metric(
             "💼 Predicted Package",
             f"{prediction:.2f} LPA"
         )
+
 
     with metric3:
 
@@ -265,31 +370,40 @@ if predict_button:
         "### 📈 CGPA vs Expected Package"
     )
 
+
     # Generate CGPA values
+
     cgpa_values = np.linspace(
         0,
         10,
         100
     ).reshape(-1, 1)
 
-    # Predict packages
+
+    # Predict package values
+
     package_values = model.predict(
         cgpa_values
     )
 
+
     # Convert predictions to 1D array
+
     package_values = np.asarray(
         package_values
     ).flatten()
 
 
-    # -----------------------------------------------------
-    # Create chart
-    # -----------------------------------------------------
+    # =====================================================
+    # CREATE CHART
+    # =====================================================
 
     fig, ax = plt.subplots(
         figsize=(11, 5)
     )
+
+
+    # Prediction curve
 
     ax.plot(
         cgpa_values.flatten(),
@@ -298,7 +412,9 @@ if predict_button:
         label="Prediction Curve"
     )
 
-    # Highlight user's prediction
+
+    # User prediction
+
     ax.scatter(
         [cgpa],
         [prediction],
@@ -307,7 +423,9 @@ if predict_button:
         zorder=5
     )
 
-    # Labels
+
+    # Chart labels
+
     ax.set_xlabel(
         "CGPA",
         fontsize=12
@@ -318,24 +436,28 @@ if predict_button:
         fontsize=12
     )
 
+
     ax.set_title(
         "CGPA vs Expected Package",
         fontsize=16,
         fontweight="bold"
     )
 
+
     ax.grid(
         True,
         alpha=0.3
     )
 
+
     ax.legend()
+
 
     st.pyplot(fig)
 
 
     # =====================================================
-    # PREDICTION RANGE
+    # PREDICTION SUMMARY
     # =====================================================
 
     st.divider()
@@ -344,15 +466,19 @@ if predict_button:
         "### 📊 Prediction Summary"
     )
 
+
     min_package = float(
         np.min(package_values)
     )
+
 
     max_package = float(
         np.max(package_values)
     )
 
+
     summary1, summary2, summary3 = st.columns(3)
+
 
     with summary1:
 
@@ -361,12 +487,14 @@ if predict_button:
             f"{min_package:.2f} LPA"
         )
 
+
     with summary2:
 
         st.metric(
             "Your Prediction",
             f"{prediction:.2f} LPA"
         )
+
 
     with summary3:
 
@@ -376,11 +504,11 @@ if predict_button:
         )
 
 
-else:
+# =========================================================
+# WELCOME SCREEN
+# =========================================================
 
-    # =====================================================
-    # WELCOME CARD
-    # =====================================================
+else:
 
     with result_col:
 
