@@ -1,0 +1,430 @@
+import streamlit as st
+import joblib
+import numpy as np
+import matplotlib.pyplot as plt
+
+# =========================================================
+# PAGE CONFIGURATION
+# =========================================================
+
+st.set_page_config(
+    page_title="CGPA Package Predictor",
+    page_icon="🎓",
+    layout="wide"
+)
+
+# =========================================================
+# CUSTOM CSS
+# =========================================================
+
+st.markdown("""
+<style>
+
+.stApp {
+    background: linear-gradient(135deg, #f5f7ff, #eef2ff);
+}
+
+.title {
+    font-size: 48px;
+    font-weight: 800;
+    text-align: center;
+    margin-top: 10px;
+    margin-bottom: 5px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #666;
+    font-size: 18px;
+    margin-bottom: 30px;
+}
+
+.prediction-card {
+    padding: 30px;
+    border-radius: 22px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    text-align: center;
+    box-shadow: 0px 10px 30px rgba(0,0,0,0.15);
+}
+
+.prediction-title {
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.package {
+    font-size: 48px;
+    font-weight: bold;
+}
+
+.cgpa-text {
+    font-size: 18px;
+    margin-top: 10px;
+}
+
+.info-card {
+    padding: 25px;
+    border-radius: 18px;
+    background: white;
+    box-shadow: 0px 5px 20px rgba(0,0,0,0.08);
+}
+
+.footer {
+    text-align: center;
+    color: #777;
+    margin-top: 20px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+
+# =========================================================
+# LOAD MODEL
+# =========================================================
+
+try:
+    model = joblib.load("model.joblib")
+
+except FileNotFoundError:
+    st.error(
+        "⚠️ model.joblib not found!\n\n"
+        "Make sure model.joblib is in the same folder as app.py."
+    )
+    st.stop()
+
+except Exception as e:
+    st.error(f"❌ Error loading model: {e}")
+    st.stop()
+
+
+# =========================================================
+# HEADER
+# =========================================================
+
+st.markdown(
+    '<div class="title">🎓 CGPA → Package Predictor</div>',
+    unsafe_allow_html=True
+)
+
+st.markdown(
+    '<div class="subtitle">'
+    'Machine Learning based Salary Package Prediction'
+    '</div>',
+    unsafe_allow_html=True
+)
+
+st.divider()
+
+
+# =========================================================
+# MAIN COLUMNS
+# =========================================================
+
+input_col, result_col = st.columns([1, 2])
+
+
+# =========================================================
+# INPUT SECTION
+# =========================================================
+
+with input_col:
+
+    st.markdown("### 📊 Enter Your Details")
+
+    cgpa = st.number_input(
+        "Enter your CGPA",
+        min_value=0.0,
+        max_value=10.0,
+        value=7.0,
+        step=0.1
+    )
+
+    st.write("")
+
+    predict_button = st.button(
+        "🚀 Predict Package",
+        use_container_width=True
+    )
+
+    st.write("")
+
+    st.info(
+        "📌 Enter CGPA between 0 and 10."
+    )
+
+
+# =========================================================
+# PREDICTION
+# =========================================================
+
+if predict_button:
+
+    # -----------------------------------------------------
+    # Prepare input
+    # -----------------------------------------------------
+
+    input_data = np.array([[cgpa]])
+
+    # -----------------------------------------------------
+    # Make prediction
+    # -----------------------------------------------------
+
+    try:
+
+        prediction = model.predict(input_data)
+
+        # IMPORTANT:
+        # Convert NumPy array to a single float value
+        prediction = float(
+            np.asarray(prediction).flatten()[0]
+        )
+
+        # Prevent negative package
+        prediction = max(0, prediction)
+
+    except Exception as e:
+
+        st.error(
+            f"❌ Prediction failed: {e}"
+        )
+
+        st.stop()
+
+
+    # =====================================================
+    # RESULT CARD
+    # =====================================================
+
+    with result_col:
+
+        st.markdown(
+            f"""
+            <div class="prediction-card">
+
+                <div class="prediction-title">
+                    💼 Expected Package
+                </div>
+
+                <div class="package">
+                    {prediction:.2f} LPA
+                </div>
+
+                <div class="cgpa-text">
+                    Based on CGPA: {cgpa:.2f}
+                </div>
+
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+
+    st.write("")
+
+
+    # =====================================================
+    # METRICS
+    # =====================================================
+
+    metric1, metric2, metric3 = st.columns(3)
+
+    with metric1:
+
+        st.metric(
+            "🎓 Your CGPA",
+            f"{cgpa:.2f}"
+        )
+
+    with metric2:
+
+        st.metric(
+            "💼 Predicted Package",
+            f"{prediction:.2f} LPA"
+        )
+
+    with metric3:
+
+        annual_salary = prediction * 100000
+
+        st.metric(
+            "💰 Annual Salary",
+            f"₹{annual_salary:,.0f}"
+        )
+
+
+    st.divider()
+
+
+    # =====================================================
+    # PREDICTION CHART
+    # =====================================================
+
+    st.markdown(
+        "### 📈 CGPA vs Expected Package"
+    )
+
+    # Generate CGPA values
+    cgpa_values = np.linspace(
+        0,
+        10,
+        100
+    ).reshape(-1, 1)
+
+    # Predict packages
+    package_values = model.predict(
+        cgpa_values
+    )
+
+    # Convert predictions to 1D array
+    package_values = np.asarray(
+        package_values
+    ).flatten()
+
+
+    # -----------------------------------------------------
+    # Create chart
+    # -----------------------------------------------------
+
+    fig, ax = plt.subplots(
+        figsize=(11, 5)
+    )
+
+    ax.plot(
+        cgpa_values.flatten(),
+        package_values,
+        linewidth=3,
+        label="Prediction Curve"
+    )
+
+    # Highlight user's prediction
+    ax.scatter(
+        [cgpa],
+        [prediction],
+        s=180,
+        label="Your Prediction",
+        zorder=5
+    )
+
+    # Labels
+    ax.set_xlabel(
+        "CGPA",
+        fontsize=12
+    )
+
+    ax.set_ylabel(
+        "Package (LPA)",
+        fontsize=12
+    )
+
+    ax.set_title(
+        "CGPA vs Expected Package",
+        fontsize=16,
+        fontweight="bold"
+    )
+
+    ax.grid(
+        True,
+        alpha=0.3
+    )
+
+    ax.legend()
+
+    st.pyplot(fig)
+
+
+    # =====================================================
+    # PREDICTION RANGE
+    # =====================================================
+
+    st.divider()
+
+    st.markdown(
+        "### 📊 Prediction Summary"
+    )
+
+    min_package = float(
+        np.min(package_values)
+    )
+
+    max_package = float(
+        np.max(package_values)
+    )
+
+    summary1, summary2, summary3 = st.columns(3)
+
+    with summary1:
+
+        st.metric(
+            "Minimum Estimated",
+            f"{min_package:.2f} LPA"
+        )
+
+    with summary2:
+
+        st.metric(
+            "Your Prediction",
+            f"{prediction:.2f} LPA"
+        )
+
+    with summary3:
+
+        st.metric(
+            "Maximum Estimated",
+            f"{max_package:.2f} LPA"
+        )
+
+
+else:
+
+    # =====================================================
+    # WELCOME CARD
+    # =====================================================
+
+    with result_col:
+
+        st.markdown(
+            """
+            <div class="info-card">
+
+                <h2>👋 Welcome!</h2>
+
+                <p>
+                This application uses a Machine Learning model
+                to estimate an expected salary package based on
+                your CGPA.
+                </p>
+
+                <br>
+
+                <h4>🤖 Model Input</h4>
+                <p>CGPA</p>
+
+                <h4>📤 Model Output</h4>
+                <p>Expected Package in LPA</p>
+
+                <h4>📈 Visualization</h4>
+                <p>CGPA vs Package Prediction Curve</p>
+
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+
+# =========================================================
+# FOOTER
+# =========================================================
+
+st.divider()
+
+st.markdown(
+    """
+    <div class="footer">
+        🎓 CGPA Package Prediction |
+        Built with Python + Machine Learning + Streamlit
+    </div>
+    """,
+    unsafe_allow_html=True
+)

@@ -1,0 +1,6 @@
+used library
+numpy
+pandas 
+streamlit
+seaborn
+matplotlib
