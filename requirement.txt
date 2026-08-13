@@ -1,7 +1,7 @@
-used library
 numpy
-pandas 
+pandas
 streamlit
 seaborn
 matplotlib
-sckit-learn
+scikit-learn
+joblib
